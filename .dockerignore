@@ -1,0 +1,22 @@
+# Controle de versão
+
+.git
+.gitignore
+
+# IDEs e editores
+
+.vscode
+.idea
+
+# Sistema operacional
+
+.DS_Store
+Thumbs.db
+
+# Documentação
+
+README.md
+
+# Arquivos temporários
+
+*.log

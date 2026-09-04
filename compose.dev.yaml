@@ -1,0 +1,33 @@
+name: devops-pipeline-example
+
+services:
+  api:
+    image: devops-pipeline-example-api:dev
+
+    container_name: devops-pipeline-example-api
+
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+
+    volumes:
+      - ./public:/var/www/html/public
+
+  web:
+    image: devops-pipeline-example-web:dev
+
+    container_name: devops-pipeline-example-web
+
+    build:
+      context: .
+      dockerfile: docker/nginx/Dockerfile
+
+    ports:
+      - "8080:80"
+
+    volumes:
+      - ./public:/var/www/html/public:ro
+      - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+
+    depends_on:
+      - api
