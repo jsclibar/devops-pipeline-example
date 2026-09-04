@@ -1,0 +1,20 @@
+name: devops-pipeline-example
+
+services:
+  api:
+    image: devops-pipeline-example-api:1.0.0
+    container_name: devops-pipeline-example-api
+
+    restart: unless-stopped
+
+  web:
+    image: devops-pipeline-example-web:1.0.0
+    container_name: devops-pipeline-example-web
+
+    ports:
+      - "8080:80"
+
+    depends_on:
+      - api
+
+    restart: unless-stopped
