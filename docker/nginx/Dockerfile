@@ -1,6 +1,8 @@
 # Imagem oficial do Nginx
 
-FROM nginx:1.28-alpine
+FROM nginx:1.31.5-alpine
+
+#RUN apk upgrade --no-cache
 
 # Instala o curl para o HEALTHCHECK
 
