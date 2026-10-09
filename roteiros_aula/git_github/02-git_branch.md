@@ -193,7 +193,9 @@ Confira o histórico:
 git log --oneline --decorate
 ```
 
-Agora teremos algo parecido com:
+Agora a branch `feature/contato` possui um commit que ainda não existe na `main`.
+
+Exemplo:
 
 ```text
 A → B → C → D
@@ -285,48 +287,37 @@ contato.html
 
 deve aparecer novamente.
 
-Esse é um dos principais conceitos de branch:
-
-> Cada branch pode representar um estado diferente do projeto.
+Esse comportamento mostra que cada branch pode representar um estado diferente do projeto.
 
 ---
 
-# 28. Conferir os remotos
+# 28. Enviar a branch para o GitHub
 
-Antes de enviar a nova branch para o GitHub, confira o remoto:
+Até agora, a branch existe apenas no computador local.
 
-```bash
-git remote -v
-```
-
-Deve aparecer o repositório do aluno como `origin`.
-
-Exemplo:
-
-```text
-origin  https://github.com/USUARIO/site-empresa.git (fetch)
-origin  https://github.com/USUARIO/site-empresa.git (push)
-```
-
----
-
-# 29. Enviar a branch para o GitHub
-
-Envie a branch atual para o repositório remoto:
+Envie a branch para o GitHub:
 
 ```bash
 git push -u origin feature/contato
 ```
 
-Esse comando envia:
+O comando significa:
 
 ```text
-feature/contato local
-        ↓
-feature/contato no GitHub
+git push
+→ envia commits
+
+origin
+→ repositório remoto
+
+feature/contato
+→ branch que será enviada
+
+-u
+→ salva a relação entre a branch local e a branch remota
 ```
 
-O `-u` salva a relação entre:
+Depois disso, teremos:
 
 ```text
 feature/contato local
@@ -334,123 +325,28 @@ feature/contato local
 origin/feature/contato
 ```
 
-Depois disso, futuros `push` nessa branch podem ser feitos apenas com:
-
-```bash
-git push
-```
-
 ---
 
-# 30. Conferir as branches no GitHub
+# 29. Conferir a branch no GitHub
 
 Acesse o repositório no GitHub.
 
-Agora devem existir duas branches:
+Agora devem existir pelo menos duas branches:
 
 ```text
 main
 feature/contato
 ```
 
-A branch `main` representa a versão principal do projeto.
+A branch `main` ainda representa a versão principal.
 
 A branch `feature/contato` contém a nova funcionalidade.
 
 ---
 
-# 31. Abrir um Pull Request
+# 30. Fazer o merge localmente
 
-No GitHub, crie um Pull Request para enviar as alterações da:
-
-```text
-feature/contato
-```
-
-para:
-
-```text
-main
-```
-
-O fluxo será:
-
-```text
-feature/contato
-        ↓
-   Pull Request
-        ↓
-       main
-```
-
-O Pull Request permite revisar as alterações antes de integrá-las à branch principal.
-
----
-
-# 32. Conferir o Pull Request
-
-Antes do merge, confira:
-
-- os commits;
-- os arquivos alterados;
-- as linhas adicionadas;
-- as linhas removidas;
-- a branch de origem;
-- a branch de destino.
-
-Neste caso:
-
-```text
-origem:
-feature/contato
-
-destino:
-main
-```
-
----
-
-# 33. Fazer o Merge
-
-Depois de revisar, faça o merge no GitHub.
-
-A alteração da branch:
-
-```text
-feature/contato
-```
-
-passará a fazer parte da:
-
-```text
-main
-```
-
-Antes:
-
-```text
-A → B → C
-        \
-         D
-         ↑
-feature/contato
-```
-
-Depois do merge:
-
-```text
-A → B → C → D
-              ↑
-             main
-```
-
----
-
-# 34. Entender o que aconteceu localmente
-
-O merge foi realizado no GitHub.
-
-Mas sua `main` local ainda pode estar desatualizada.
+Agora vamos integrar a branch `feature/contato` na `main` usando o próprio Git.
 
 Primeiro, volte para a `main`:
 
@@ -464,64 +360,131 @@ Confira:
 git branch
 ```
 
-Agora:
+Deve aparecer:
 
 ```text
   feature/contato
 * main
 ```
 
----
-
-# 35. Atualizar a main local
-
-Busque as alterações que foram integradas no GitHub:
+Agora faça o merge:
 
 ```bash
-git pull
+git merge feature/contato
 ```
 
-Agora sua `main` local deve receber o commit da página de contato.
+Esse comando significa:
 
-Confira:
+```text
+pegue as alterações da branch feature/contato
+e integre na branch atual
+```
+
+Como estamos na `main`, o merge será feito em:
+
+```text
+feature/contato
+        ↓
+       main
+```
+
+---
+
+# 31. Entendendo o merge
+
+Antes:
+
+```text
+A → B → C
+        \
+         D
+         ↑
+feature/contato
+```
+
+A `main` ainda estava no commit `C`.
+
+Depois do merge:
+
+```text
+A → B → C → D
+              ↑
+             main
+```
+
+Agora a alteração também faz parte da `main`.
+
+---
+
+# 32. Conferir os arquivos depois do merge
+
+Veja os arquivos:
 
 ```bash
 ls
 ```
 
-O arquivo:
+Agora o arquivo:
 
 ```text
 contato.html
 ```
 
-deve aparecer.
+deve aparecer na `main`.
 
----
-
-# 36. Conferir o histórico
-
-Veja o histórico atualizado:
+Confira o histórico:
 
 ```bash
 git log --oneline --decorate
 ```
 
-Agora a `main` deve conter a alteração que antes existia apenas na `feature/contato`.
+---
+
+# 33. Enviar a `main` atualizada para o GitHub
+
+O merge foi realizado localmente.
+
+Agora precisamos atualizar o repositório remoto:
+
+```bash
+git push
+```
+
+Depois disso, a `main` do GitHub também terá a página de contato.
 
 ---
 
-# 37. Excluir a branch local
+# 34. Conferir no GitHub
+
+Atualize a página do repositório.
+
+Confira:
+
+- a branch `main`;
+- o arquivo `contato.html`;
+- o histórico de commits.
+
+Agora a funcionalidade já faz parte da branch principal.
+
+---
+
+# 35. Excluir a branch local
 
 Depois que a funcionalidade já foi integrada à `main`, a branch local pode ser removida.
 
-Primeiro confirme que está na `main`:
+Confira primeiro a branch atual:
 
 ```bash
 git branch
 ```
 
-Depois exclua:
+Certifique-se de estar na:
+
+```text
+main
+```
+
+Agora exclua:
 
 ```bash
 git branch -d feature/contato
@@ -541,23 +504,23 @@ Deve restar:
 
 ---
 
-# 38. Excluir a branch remota
+# 36. Excluir a branch remota
 
-Se a branch ainda existir no GitHub, ela também pode ser removida.
+A branch `feature/contato` ainda pode continuar existindo no GitHub.
 
-Isso pode ser feito pelo próprio GitHub depois do merge.
+Para removê-la pelo terminal:
 
-Em muitos casos, o GitHub apresenta o botão:
-
-```text
-Delete branch
+```bash
+git push origin --delete feature/contato
 ```
 
-Depois da exclusão, a branch deixa de existir no repositório remoto.
+Depois confira no GitHub.
+
+Agora a branch remota também terá sido removida.
 
 ---
 
-# 39. Fluxo completo
+# 37. Fluxo completo com Branch e Merge
 
 ```text
 main
@@ -576,22 +539,18 @@ git commit
   ↓
 git push
   ↓
-Pull Request
+voltar para main
   ↓
-revisão
+git merge feature/contato
   ↓
-merge
+git push
   ↓
-main no GitHub
-  ↓
-git pull
-  ↓
-main local atualizada
+main atualizada no GitHub
 ```
 
 ---
 
-# 40. Principais comandos de Branch
+# 38. Principais comandos de Branch
 
 ## Ver as branches
 
@@ -617,7 +576,7 @@ git switch feature/contato
 
 ---
 
-## Voltar para a main
+## Voltar para a `main`
 
 ```bash
 git switch main
@@ -625,7 +584,7 @@ git switch main
 
 ---
 
-## Enviar a branch para o GitHub
+## Enviar uma nova branch para o GitHub
 
 ```bash
 git push -u origin feature/contato
@@ -633,10 +592,20 @@ git push -u origin feature/contato
 
 ---
 
-## Atualizar a main depois do merge
+## Fazer o merge
+
+Estando na `main`:
 
 ```bash
-git pull
+git merge feature/contato
+```
+
+---
+
+## Enviar a `main` atualizada
+
+```bash
+git push
 ```
 
 ---
@@ -649,7 +618,15 @@ git branch -d feature/contato
 
 ---
 
-# 41. Conceito principal
+## Excluir uma branch remota
+
+```bash
+git push origin --delete feature/contato
+```
+
+---
+
+# 39. Conceito principal
 
 Uma branch é uma linha de desenvolvimento separada.
 
@@ -671,7 +648,7 @@ A → B → C
 feature/contato
 ```
 
-Depois de um novo commit na feature:
+Depois de um commit na feature:
 
 ```text
 A → B → C → D
@@ -683,11 +660,21 @@ A `main` continua em `C`.
 
 A `feature/contato` avançou para `D`.
 
+Depois do merge:
+
+```text
+A → B → C → D
+              ↑
+             main
+```
+
+Agora a `main` também contém a funcionalidade.
+
 ---
 
-# 42. Branches em projetos reais
+# 40. Branches em projetos reais
 
-Branches normalmente representam trabalhos específicos.
+Branches normalmente representam tarefas específicas.
 
 Exemplos:
 
@@ -701,9 +688,7 @@ fix/login
 fix/cadastro
 ```
 
-A ideia é evitar trabalhar diretamente na branch principal.
-
-Fluxo comum:
+Fluxo básico:
 
 ```text
 tarefa
@@ -716,12 +701,44 @@ commit
   ↓
 push
   ↓
-Pull Request
-  ↓
-revisão
-  ↓
 merge
+  ↓
+main
 ```
+
+---
+
+# 41. E o Pull Request?
+
+Nesta prática, fizemos o merge diretamente pelo terminal:
+
+```bash
+git merge feature/contato
+```
+
+Isso é importante para entender o funcionamento do Git.
+
+Em equipes, porém, é muito comum não fazer o merge diretamente na `main`.
+
+Nesse caso, o fluxo costuma ser:
+
+```text
+feature/contato
+        ↓
+       push
+        ↓
+  Pull Request
+        ↓
+     revisão
+        ↓
+      merge
+        ↓
+       main
+```
+
+O Pull Request é um recurso da plataforma, como GitHub, usado para revisar e aprovar alterações antes do merge.
+
+O conceito de merge continua sendo o mesmo.
 
 ---
 
@@ -737,8 +754,9 @@ Ao final desta prática, você deverá saber:
 - realizar alterações em uma branch separada;
 - criar commits nessa branch;
 - enviar a branch para o GitHub;
-- abrir um Pull Request;
-- revisar as alterações;
-- realizar o merge;
-- atualizar a `main` local;
-- excluir uma branch depois que o trabalho foi concluído.
+- voltar para a `main`;
+- fazer um merge usando `git merge`;
+- enviar a `main` atualizada para o GitHub;
+- excluir uma branch local;
+- excluir uma branch remota;
+- entender a diferença entre `git merge` e Pull Request.
