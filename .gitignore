@@ -1,18 +1,38 @@
-# Sistema Operacional
+# Git
+.git/
+.gitignore
 
-.DS_Store
-Thumbs.db
+# Ambiente Virtual Python
+.venv/
+venv/
+env/
 
-# IDEs e Editores
+# Cache Python
+__pycache__/
+*.py[cod]
 
+# IDEs
 .vscode/
 .idea/
 
-# Logs
+# Sistema Operacional
+.DS_Store
+Thumbs.db
 
+# Testes
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# Logs e arquivos temporários
 *.log
-
-# Arquivos temporários
-
 *.tmp
 *.temp
+
+# Variáveis de ambiente
+.env
+.env.*
+!.env.example
