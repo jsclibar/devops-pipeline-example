@@ -1,12 +1,12 @@
 # DevOps Pipeline Example
 
-Projeto de exemplo para estudo de **Git, Python, FastAPI, testes automatizados, Docker, Docker Compose, Nginx e CI/CD**.
+Projeto educacional desenvolvido para demonstrar, de forma prática, os conceitos, ferramentas e processos envolvidos no ciclo de entrega de software, com foco em **DevOps**.
 
-A aplicação consiste em uma API para gerenciamento de livros de uma biblioteca, permitindo realizar operações de cadastro, consulta, atualização e exclusão (CRUD).
+O projeto utiliza uma aplicação web simples como base para explorar práticas de **versionamento de código, testes automatizados, conteinerização, integração contínua (CI), entrega contínua (CD) e implantação de aplicações**.
 
-Os dados são armazenados temporariamente em uma lista Python, sem utilização de banco de dados.
+Ao longo das atividades, serão abordadas ferramentas como Git, GitHub, Docker, Docker Compose, Nginx e GitHub Actions, permitindo compreender como essas tecnologias se integram para automatizar processos e tornar a entrega de software mais confiável e reproduzível.
 
-O objetivo principal deste projeto é servir como base prática para o aprendizado de DevOps, desde a preparação do ambiente de desenvolvimento até a construção de imagens Docker e a futura implementação de pipelines CI/CD.
+A aplicação utilizada como exemplo é uma API de gerenciamento de livros, desenvolvida em Python com FastAPI. Sua implementação é intencionalmente simples, sem banco de dados, pois **o objetivo do projeto não é o desenvolvimento da aplicação em si, mas a construção e a evolução de um fluxo de trabalho DevOps**, desde o ambiente local até a implantação em servidores.
 
 ---
 
