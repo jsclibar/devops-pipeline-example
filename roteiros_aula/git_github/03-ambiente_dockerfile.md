@@ -120,13 +120,7 @@ docker build -t api_backend:dev -f docker/python/Dockerfile .
 Listar as imagens disponíveis:
 
 ```bash
-docker image ls
-```
-
-Para reconstruir a imagem sem utilizar o cache:
-
-```bash
-docker build --no-cache -t api_backend:dev -f docker/python/Dockerfile .
+docker images
 ```
 
 ---
@@ -191,12 +185,6 @@ Listar as redes existentes:
 
 ```bash
 docker network ls
-```
-
-Inspecionar a rede criada:
-
-```bash
-docker network inspect rede-api
 ```
 
 Essa rede permite a comunicação entre contêineres e oferece resolução DNS interna pelos nomes e aliases configurados.
@@ -323,12 +311,6 @@ Verificar o consumo de CPU e memória:
 docker stats backend_api
 ```
 
-Para realizar uma única consulta:
-
-```bash
-docker stats --no-stream backend_api
-```
-
 ### 8.5. Verificar a saúde do contêiner
 
 Consultar o estado do HEALTHCHECK:
@@ -422,8 +404,6 @@ docker run -d \
   -p 8080:80 \
   nginx:dev
 ```
-
-**Importante:** se o Dockerfile estiver utilizando a imagem `nginxinc/nginx-unprivileged` e a configuração do Nginx contiver `listen 8080`, utilizar `-p 8080:8080` no lugar de `-p 8080:80`.
 
 Verificar os contêineres:
 
