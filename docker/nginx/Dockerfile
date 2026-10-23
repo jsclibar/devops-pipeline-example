@@ -1,11 +1,11 @@
 # Imagem do Nginx preparada para executar sem root
-#FROM nginxinc/nginx-unprivileged:1.31-alpine
+FROM nginxinc/nginx-unprivileged:1.31-alpine
 
 # Imagem oficial do Nginx
-FROM nginx:1.31.5-alpine
+#FROM nginx:1.31.5-alpine
 
 # Usa root temporariamente para instalar pacotes
-#USER root
+USER root
 
 # Atualiza os pacotes do sistema (opcional)
 RUN apk upgrade --no-cache
@@ -20,7 +20,7 @@ RUN rm /etc/nginx/conf.d/default.conf
 COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
 
 # Executa como usuário sem privilégios administrativos
-#USER nginx
+USER nginx
 
 # Expõe a porta HTTP
 EXPOSE 80

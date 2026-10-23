@@ -5,26 +5,26 @@ FROM python:3.13-alpine
 WORKDIR /app
 
 # Atualiza o SO
-#RUN apk update && apk upgrade --no-cache
+RUN apk update && apk upgrade --no-cache
 
 # Copia o arquivo de dependências
 COPY requirements.txt .
 
 # Instala as dependências
-RUN pip install --no-cache-dir -r requirements.txt
+#RUN pip install --no-cache-dir -r requirements.txt
 
 # Instala as dependências
-#RUN pip install --no-cache-dir -r requirements.txt \
-    #&& pip uninstall -y pip
+RUN pip install --no-cache-dir -r requirements.txt \
+    && pip uninstall -y pip
 
 # Copia a aplicação
 COPY backend_app.py .
 
 # Cria um usuário sem privilégios administrativos
-#RUN adduser -D appuser
+RUN adduser -D appuser
 
 # Executa a aplicação como usuário não-root
-#USER appuser
+USER appuser
 
 # Expõe a porta do Uvicorn
 EXPOSE 8000
