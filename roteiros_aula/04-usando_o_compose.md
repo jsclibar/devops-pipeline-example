@@ -294,3 +294,69 @@ As imagens publicadas deverão aparecer com a versão `1.0.0`.
 - O `docker push` envia a imagem existente para o GHCR.
 - As imagens publicadas mantêm a arquitetura original (AMD64 ou ARM64).
 - Para baixar imagens privadas em outro servidor, será necessária autenticação no GHCR.
+
+# Docker Compose — Deploy na AWS
+
+Nesta etapa, vamos baixar as imagens públicas do GitHub Container Registry (GHCR) e executar a aplicação na AWS EC2, utilizando o arquivo `compose.aws.yaml` já configurado.
+
+Não é necessário fazer login no GHCR nem construir as imagens novamente.
+
+## 1. Baixar as imagens
+
+```bash
+docker compose -f compose.aws.yaml pull
+```
+
+Baixa as imagens da API Python e do Nginx diretamente do GHCR.
+
+## 2. Subir os contêineres
+
+```bash
+docker compose -f compose.aws.yaml up -d
+```
+
+Inicia os serviços `api` e `web` em segundo plano, utilizando as imagens baixadas.
+
+## 3. Verificar os contêineres
+
+```bash
+docker compose -f compose.aws.yaml ps
+```
+
+## 4. Visualizar os logs
+
+```bash
+docker compose -f compose.aws.yaml logs -f
+```
+
+Pressione `Ctrl + C` para sair sem parar os contêineres.
+
+## 5. Acessar a aplicação
+
+```text
+http://IP_PUBLICO_DA_EC2:8080
+```
+
+A porta TCP `8080` deve estar liberada no Security Group da instância EC2.
+
+## 6. Parar e remover os contêineres
+
+```bash
+docker compose -f compose.aws.yaml down
+```
+
+Remove os contêineres e a rede, preservando as imagens.
+
+---
+
+## Resumo rápido
+
+| Ação | Comando |
+|---|---|
+| Baixar imagens | `docker compose -f compose.aws.yaml pull` |
+| Subir | `docker compose -f compose.aws.yaml up -d` |
+| Verificar | `docker compose -f compose.aws.yaml ps` |
+| Logs | `docker compose -f compose.aws.yaml logs -f` |
+| Parar e remover | `docker compose -f compose.aws.yaml down` |
+
+**Importante:** execute os comandos no diretório que contém `compose.aws.yaml`. Esse arquivo deve referenciar as imagens públicas do GHCR e elas devem ser compatíveis com a arquitetura da instância EC2.
