@@ -34,3 +34,5 @@ HEALTHCHECK CMD python -c "import urllib.request; urllib.request.urlopen('http:/
 
 # Inicializa o Uvicorn
 CMD ["uvicorn", "backend_app:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# FIM

@@ -30,3 +30,5 @@ HEALTHCHECK CMD curl --fail http://localhost/nginx-health || exit 1
 
 # Inicializa o Nginx em primeiro plano
 CMD ["nginx", "-g", "daemon off;"]
+
+# FIM
