@@ -1,18 +1,17 @@
 # Nome exibido na aba Actions do GitHub.
-name: CI/CD da API
+name: CI da API e do Nginx
 
-# Define as formas de iniciar este workflow.
+# Define quando este workflow pode executar.
 on:
-  # Inicia automaticamente quando alterações são enviadas.
+  # Execução automática quando alterações são enviadas.
   push:
-    # Para o evento push, executa somente na branch main.
+    # Executa automaticamente apenas na branch main.
     branches: [main]
 
-  # Habilita o botão "Run workflow" na aba Actions.
-  # Na execução manual, você poderá selecionar a branch.
+  # Permite iniciar manualmente pelo botão "Run workflow".
   workflow_dispatch:
 
-# Define os acessos do token temporário fornecido pelo GitHub.
+# Define as permissões do token automático do GitHub.
 permissions:
   # Permite obter o código do repositório.
   contents: read
@@ -20,122 +19,166 @@ permissions:
   # Permite publicar imagens no GitHub Container Registry.
   packages: write
 
-# Agrupa os trabalhos que serão executados.
+# Agrupa os trabalhos do workflow.
 jobs:
-  # Identificador escolhido para nosso único trabalho.
+  # Identificador do nosso único trabalho.
   pipeline:
-    # Executa em uma máquina temporária Ubuntu do GitHub.
+    # Usa uma máquina temporária Ubuntu fornecida pelo GitHub.
     # Essa máquina já possui Docker instalado.
     runs-on: ubuntu-latest
 
-    # Passos executados em sequência, na mesma máquina.
+    # Os passos executam em sequência na mesma máquina.
     # Se um passo falhar, os seguintes não executam por padrão.
     steps:
-      # Nome do passo exibido na interface.
+      # Primeiro passo: obter os arquivos do projeto.
       - name: Obter código do projeto
 
-        # "uses" utiliza uma ação pronta.
+        # "uses" executa uma ação pronta.
         # checkout obtém o código do repositório.
-        # @v6 identifica a versão dessa ação.
+        # @v6 indica a versão dessa ação.
         uses: actions/checkout@v6
 
-      # Prepara o Python para instalar dependências e testar.
+      # Segundo passo: preparar o Python.
       - name: Preparar Python
 
-        # Ação pronta que disponibiliza o Python.
+        # Disponibiliza o Python na máquina.
         uses: actions/setup-python@v6
 
-        # Parâmetros enviados para essa ação.
+        # "with" fornece opções para a ação acima.
         with:
-          # Versão do Python usada neste workflow.
+          # Versão do Python utilizada nos testes.
           python-version: "3.13"
 
-      # Instala as bibliotecas e verifica a aplicação.
+      # Verifica a aplicação antes de construir as imagens.
       - name: Testar aplicação
 
         # "run" executa comandos no terminal.
         # O símbolo | permite escrever várias linhas.
         run: |
           # Instala as dependências da aplicação e dos testes.
-          # -r indica o arquivo que contém a lista de dependências.
+          # -r indica o arquivo que lista essas dependências.
           python -m pip install -r requirements-dev.txt
 
           # Executa os testes existentes no projeto.
           # -v mostra o nome e o resultado de cada teste.
-          # Se algum teste falhar, a publicação não acontecerá.
+          # Se algum teste falhar, a publicação não será executada.
           python -m pytest -v
 
-      # Autentica o Docker para publicar no registry do GitHub.
+      # Autentica o Docker para permitir a publicação das imagens.
       - name: Autenticar no GHCR
 
-        # Define variáveis de ambiente para este passo.
+        # "env" disponibiliza variáveis para este passo.
         env:
-          # TOKEN é um nome escolhido por nós.
+          # TOKEN é o nome escolhido por nós para esta variável.
           #
-          # ${{ ... }} é uma expressão do GitHub Actions.
-          # secrets.GITHUB_TOKEN acessa a credencial temporária
-          # criada automaticamente pelo GitHub.
+          # ${{ ... }} é uma expressão interpretada pelo Actions.
+          # secrets.GITHUB_TOKEN acessa o token temporário
+          # fornecido automaticamente pelo GitHub.
           #
-          # O valor dessa credencial será colocado em TOKEN.
-          # Você não precisa criar um token pessoal.
+          # Não é necessário criar um token pessoal.
           TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-        # Executa o comando de autenticação.
+        # Executa a autenticação.
         run: |
           # $TOKEN acessa a variável declarada em env.
           #
-          # echo fornece o token ao próximo comando através do |.
+          # echo fornece o token.
+          # O símbolo | encaminha esse valor ao docker login.
           #
-          # docker login ghcr.io autentica no registry do GitHub.
+          # ghcr.io é o registry do GitHub.
           #
-          # -u informa o usuário da autenticação.
-          # GITHUB_ACTOR é fornecido automaticamente pelo GitHub
+          # -u informa o usuário.
+          # GITHUB_ACTOR é preenchido automaticamente pelo GitHub
           # e identifica quem iniciou a execução.
           #
-          # --password-stdin recebe o token pela entrada do comando.
+          # --password-stdin recebe a credencial pela entrada
+          # do comando, através do |.
           #
           # A barra invertida continua o comando na linha seguinte.
           echo "$TOKEN" | docker login ghcr.io \
             -u "$GITHUB_ACTOR" \
             --password-stdin
 
-      # Constrói a imagem utilizando o Dockerfile existente.
+      # Constrói a imagem Docker da aplicação Python.
       - name: Construir imagem da API
 
-        # Executa o comando de construção.
+        # Define explicitamente Bash para interpretar os comandos.
+        # A expressão que abrevia o commit abaixo utiliza Bash.
+        shell: bash
+
+        # Comandos executados neste passo.
         run: |
-          # docker build constrói a imagem.
+          # GITHUB_SHA contém o identificador completo do commit.
+          # Essa variável é fornecida automaticamente pelo GitHub.
           #
-          # -t define seu nome e sua tag.
+          # ${GITHUB_SHA:0:7} pega 7 caracteres a partir da posição 0.
+          # Exemplo: 77bdc943c5... passa a ser 77bdc94.
           #
-          # ghcr.io é o endereço do registry.
-          # jsclibar é o proprietário do pacote neste exemplo.
-          # devops-pipeline-example-api é o nome da imagem.
+          # Guardamos esse resultado em uma variável chamada TAG.
+          # Na atribuição abaixo, não coloque espaços em torno do =.
+          TAG=${GITHUB_SHA:0:7}
+
+          # docker build constrói uma imagem.
           #
-          # Depois dos dois-pontos vem a tag: $GITHUB_SHA.
-          # GITHUB_SHA é uma variável automática com
-          # o identificador completo do commit desta execução.
+          # -t define o nome e a tag:
+          #   ghcr.io = registry;
+          #   jsclibar = proprietário do pacote;
+          #   devops-pipeline-example-api = nome da imagem;
+          #   $TAG = versão identificada pelo commit abreviado.
           #
-          # Na execução manual, corresponde ao commit
-          # da branch ou referência selecionada.
+          # -f informa o Dockerfile da API.
           #
-          # -f indica qual Dockerfile deve ser utilizado.
-          #
-          # O ponto final usa a pasta atual, a raiz do projeto,
-          # como contexto da construção.
+          # O ponto final usa a raiz do projeto como contexto
+          # de construção, permitindo copiar os arquivos necessários.
           docker build \
-            -t ghcr.io/jsclibar/devops-pipeline-example-api:$GITHUB_SHA \
+            -t ghcr.io/jsclibar/devops-pipeline-example-api:$TAG \
             -f docker/python/Dockerfile .
 
-      # Envia a imagem construída para o GHCR.
-      - name: Publicar imagem no GHCR
+      # Constrói a imagem Docker do proxy reverso Nginx.
+      - name: Construir imagem do Nginx
 
-        # Executa o comando de publicação.
+        # Utiliza Bash, como no passo anterior.
+        shell: bash
+
+        # Comandos executados neste passo.
         run: |
-          # docker push publica a imagem no registry.
+          # Calcula novamente a tag porque este passo abre
+          # outro processo de terminal.
           #
-          # O nome e a tag são iguais aos utilizados no build.
+          # A variável TAG criada no passo anterior não é
+          # transferida automaticamente para este passo.
           #
-          # A autenticação do passo anterior continua disponível,
-          # pois os passos executam na mesma máquina.
-          docker push ghcr.io/jsclibar/devops-pipeline-example-api:$GITHUB_SHA
+          # GITHUB_SHA continua disponível, pois é uma variável
+          # automática do GitHub em todos esses passos.
+          TAG=${GITHUB_SHA:0:7}
+
+          # Constrói a imagem do Nginx com a mesma tag da API.
+          #
+          # O nome termina em -web para manter o padrão
+          # das imagens utilizadas no projeto.
+          #
+          # Utiliza o Dockerfile específico do Nginx.
+          # O contexto continua sendo a raiz do projeto.
+          docker build \
+            -t ghcr.io/jsclibar/devops-pipeline-example-web:$TAG \
+            -f docker/nginx/Dockerfile .
+
+      # Publica as duas imagens construídas.
+      - name: Publicar imagens no GHCR
+
+        # Utiliza Bash para abreviar o identificador do commit.
+        shell: bash
+
+        # Comandos executados neste passo.
+        run: |
+          # Recupera a mesma tag usada nas duas construções.
+          TAG=${GITHUB_SHA:0:7}
+
+          # Envia a imagem da API para o GHCR.
+          # Nome e tag são iguais aos utilizados no build.
+          docker push ghcr.io/jsclibar/devops-pipeline-example-api:$TAG
+
+          # Envia a imagem do Nginx para o GHCR.
+          # A autenticação continua disponível porque estamos
+          # na mesma máquina do passo de login.
+          docker push ghcr.io/jsclibar/devops-pipeline-example-web:$TAG
