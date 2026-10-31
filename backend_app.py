@@ -14,7 +14,7 @@ import uvicorn
 app = FastAPI(
     title="Backend (API) da Biblioteca Comunitária Saber",
     description="API para gerenciamento do acervo de livros da biblioteca",
-    version="1.0.0"
+    version="1.0.1"
 )
 
 
