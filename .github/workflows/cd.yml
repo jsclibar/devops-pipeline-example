@@ -1,0 +1,70 @@
+name: CD manual
+
+# Execução manual com escolha da tag.
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag publicada pela CI. Exemplo: 446c0bc"
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Preparar e atualizar aplicação
+        uses: appleboy/ssh-action@v1
+
+        # Tag escolhida ao iniciar o workflow.
+        env:
+          TAG: ${{ inputs.tag }}
+
+        with:
+          # Conexão SSH com sua chave existente.
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          fingerprint: ${{ secrets.EC2_FINGERPRINT }}
+
+          # Envia TAG para a EC2.
+          envs: TAG
+
+          # Tudo abaixo executa na EC2.
+          script: |
+            # Para se algum comando falhar.
+            set -e
+
+            # Cria a pasta se ela ainda não existir.
+            mkdir -p "$HOME/devops-pipeline-example"
+            cd "$HOME/devops-pipeline-example"
+
+            # Cria ou substitui o arquivo Compose.
+            # As aspas em 'EOF' preservam ${TAG} no arquivo.
+            cat > compose.aws.yaml <<'EOF'
+            name: devops-pipeline-example
+
+            services:
+              api:
+                image: ghcr.io/jsclibar/devops-pipeline-example-api:${TAG}
+                restart: unless-stopped
+
+              web:
+                image: ghcr.io/jsclibar/devops-pipeline-example-web:${TAG}
+                restart: unless-stopped
+                ports:
+                  - "8080:80"
+                depends_on:
+                  api:
+                    condition: service_healthy
+            EOF
+
+            # Disponibiliza a tag para o Compose substituir ${TAG}.
+            export TAG
+
+            # Baixa as duas imagens da versão escolhida.
+            docker compose -f compose.aws.yaml pull
+
+            # Atualiza os contêineres e aguarda a inicialização.
+            docker compose -f compose.aws.yaml up -d --force-recreate --wait
