@@ -1,12 +1,16 @@
 # DevOps Pipeline Example
 
-Projeto educacional desenvolvido para demonstrar, de forma prática, os conceitos, ferramentas e processos envolvidos no ciclo de entrega de software, com foco em **DevOps**.
+Projeto educacional desenvolvido para demonstrar, de forma prática, o ciclo de entrega de software com foco em **DevOps**.
 
-O projeto utiliza uma aplicação web simples como base para explorar práticas de **versionamento de código, testes automatizados, conteinerização, integração contínua (CI), entrega contínua (CD) e implantação de aplicações**.
+Uma API simples de gerenciamento de livros, desenvolvida com Python e FastAPI, serve de base para explorar **versionamento, testes automatizados, Docker, integração contínua e implantação de aplicações**.
 
-Ao longo das atividades, serão abordadas ferramentas como Git, GitHub, Docker, Docker Compose, Nginx e GitHub Actions, permitindo compreender como essas tecnologias se integram para automatizar processos e tornar a entrega de software mais confiável e reproduzível.
+O projeto utiliza Git, GitHub, Docker, Docker Compose, Nginx e GitHub Actions.
 
-A aplicação utilizada como exemplo é uma API de gerenciamento de livros, desenvolvida em Python com FastAPI. Sua implementação é intencionalmente simples, sem banco de dados, pois **o objetivo do projeto não é o desenvolvimento da aplicação em si, mas a construção e a evolução de um fluxo de trabalho DevOps**, desde o ambiente local até a implantação em servidores.
+A aplicação não utiliza banco de dados. Sua implementação é intencionalmente simples para que o foco das atividades seja o fluxo de entrega, desde a execução local até o deploy em um servidor.
+
+A CI executa os testes e publica as imagens da API e do Nginx no GitHub Container Registry (GHCR). O CD é iniciado manualmente e atualiza o servidor com a versão escolhida.
+
+Uma **instância Amazon EC2** é utilizada como exemplo. O mesmo modelo pode ser adaptado para outras clouds, VPS ou servidores próprios com Docker e acesso SSH.
 
 ---
 
@@ -14,32 +18,30 @@ A aplicação utilizada como exemplo é uma API de gerenciamento de livros, dese
 
 A aplicação utiliza dois serviços:
 
-- **Nginx:** atua como proxy reverso, recebendo as requisições HTTP.
-- **Python + FastAPI + Uvicorn:** executa a API e processa as requisições.
+- **Nginx:** recebe as requisições e atua como proxy reverso.
+- **Python + FastAPI + Uvicorn:** executa a API.
 
 ```text
-            Cliente
-               |
-               | HTTP
-               v
-         localhost:8080
-               |
-               v
-         Nginx (porta 80)
-               |
-               | HTTP
-               | proxy_pass
-               v
-        Uvicorn (porta 8000)
-               |
-               v
-             FastAPI
-               |
-               v
-           API de Livros
+Cliente
+   |
+   | HTTP
+   v
+Host ou servidor:8080
+   |
+   v
+Nginx — porta 80
+   |
+   | Rede interna do Docker
+   v
+Uvicorn + FastAPI — porta 8000
+   |
+   v
+API de Livros
 ```
 
-O Nginx e a aplicação Python são executados em contêineres separados, conectados pela rede criada automaticamente pelo Docker Compose.
+Os serviços são executados em contêineres separados, conectados pela rede criada pelo Docker Compose.
+
+No computador, o acesso ocorre por `http://localhost:8080`. No servidor, utiliza-se seu IP ou DNS.
 
 ---
 
@@ -47,6 +49,11 @@ O Nginx e a aplicação Python são executados em contêineres separados, conect
 
 ```text
 devops-pipeline-example/
+│
+├── .github/
+│   └── workflows/
+│       ├── ci.yml
+│       └── cd.yml
 │
 ├── backend_app.py
 ├── requirements.txt
@@ -59,7 +66,6 @@ devops-pipeline-example/
 │   ├── nginx/
 │   │   ├── Dockerfile
 │   │   └── default.conf
-│   │
 │   └── python/
 │       └── Dockerfile
 │
@@ -70,274 +76,149 @@ devops-pipeline-example/
 └── README.md
 ```
 
-**Principais arquivos:**
-
-| Arquivo | Descrição |
+| Arquivo | Finalidade |
 |---|---|
-| `backend_app.py` | Código da aplicação FastAPI |
-| `requirements.txt` | Dependências necessárias para executar a aplicação |
-| `requirements-dev.txt` | Dependências para desenvolvimento e testes |
-| `tests/test_api.py` | Testes automatizados da API |
-| `docker/python/Dockerfile` | Construção da imagem da aplicação Python |
+| `.github/workflows/ci.yml` | Testar, construir e publicar as imagens |
+| `.github/workflows/cd.yml` | Implantar uma versão escolhida por SSH |
+| `backend_app.py` | Código da API |
+| `requirements.txt` | Dependências da aplicação |
+| `requirements-dev.txt` | Dependências de desenvolvimento e testes |
+| `tests/test_api.py` | Testes automatizados |
+| `docker/python/Dockerfile` | Construção da imagem da API |
 | `docker/nginx/Dockerfile` | Construção da imagem do Nginx |
-| `docker/nginx/default.conf` | Configuração do Nginx como proxy reverso |
-| `compose.dev.yaml` | Ambiente Docker de desenvolvimento |
-| `compose.prod.yaml` | Ambiente Docker de produção |
+| `docker/nginx/default.conf` | Configuração do proxy reverso |
+| `compose.dev.yaml` | Ambiente de desenvolvimento |
+| `compose.prod.yaml` | Execução manual com imagens previamente construídas |
+
+**O arquivo `compose.aws.yaml` não faz parte do repositório.** Ele é escrito no servidor pelo workflow de CD durante a implantação.
 
 ---
 
 # 3. Requisitos
 
-Para executar a aplicação localmente:
+## Execução local
 
 - Git
 - Python 3.11 ou superior
 - pip
 - venv
 
-Para executar a aplicação em contêineres:
+## Execução com Docker
 
-- Docker
+- Docker Engine
 - Docker Compose
 
-**Sistemas operacionais utilizados nas aulas:**
+## CI/CD
 
-- Ubuntu 24.04 LTS
-- Debian 13
+- Repositório no GitHub com Actions habilitado.
+- Permissão para publicar imagens no GHCR.
+- Servidor com Docker e Compose com suporte a `--wait`.
+- Acesso SSH e usuário autorizado a executar Docker.
+- Secrets de conexão cadastrados no GitHub.
+- Conectividade entre o executor do Actions, o servidor e o GHCR.
 
-Essas distribuições disponibilizam versões do Python compatíveis com os requisitos do projeto.
+As aulas utilizam Ubuntu 24.04 LTS e Debian 13. A CI utiliza Python 3.13.
+
+As imagens do exemplo são construídas para AMD64/x86_64. O servidor deve utilizar uma arquitetura compatível.
 
 ---
 
-# 4. Instalação do Python no Debian e Ubuntu
+# 4. Preparar o Ambiente Local
 
-Antes de executar a aplicação localmente, é necessário instalar o Python.
+## 4.1. Instalar Python e ferramentas
 
-## 4.1. Atualizar os repositórios
+No Debian ou Ubuntu:
 
 ```bash
 sudo apt update
-```
-
-## 4.2. Instalar Python, pip e venv
-
-```bash
 sudo apt install -y python3 python3-venv python3-pip
 ```
 
-Esse comando instala:
-
-- `python3`: interpretador da linguagem Python.
-- `python3-venv`: ferramenta para criação de ambientes virtuais.
-- `python3-pip`: gerenciador de pacotes Python.
-
-## 4.3. Verificar a instalação
+Verifique:
 
 ```bash
 python3 --version
 ```
 
-Versões normalmente encontradas:
-
-| Sistema operacional | Python |
-|---|---|
-| Ubuntu 24.04 | Python 3.12 |
-| Debian 13 | Python 3.13 |
-
-O projeto requer Python 3.11 ou superior.
-
----
-
-# 5. Clonar o Repositório
-
-Clone o repositório do projeto:
+## 4.2. Clonar o projeto
 
 ```bash
-git clone URL_DO_REPOSITORIO
-```
-
-Entre no diretório:
-
-```bash
+git clone https://github.com/jsclibar/devops-pipeline-example.git
 cd devops-pipeline-example
 ```
 
-Os próximos comandos devem ser executados na raiz do projeto.
+Os próximos comandos devem ser executados na raiz do projeto, salvo indicação contrária.
 
----
-
-# 6. Configuração do Ambiente Virtual Python
-
-O ambiente virtual permite instalar as dependências do projeto sem modificar os pacotes Python do sistema operacional.
-
-Cada desenvolvedor deverá criar seu próprio ambiente virtual.
-
-## 6.1. Criar o ambiente virtual
+## 4.3. Criar e ativar o ambiente virtual
 
 ```bash
 python3 -m venv .venv --prompt devops-pipeline-example
-```
-
-O comando cria um ambiente virtual na pasta `.venv`.
-
-O parâmetro `--prompt` define o nome exibido no terminal quando o ambiente estiver ativado.
-
-## 6.2. Ativar o ambiente virtual
-
-```bash
 source .venv/bin/activate
 ```
 
-Após a ativação, o terminal apresentará algo semelhante a:
+O ambiente virtual isola as dependências do projeto dos pacotes do sistema.
 
-```text
-(devops-pipeline-example) usuario@ubuntu:~/devops-pipeline-example$
-```
-
-## 6.3. Verificar o interpretador Python
+Confira o interpretador utilizado:
 
 ```bash
 which python
-```
-
-O caminho deverá apontar para o ambiente virtual:
-
-```text
-/home/usuario/devops-pipeline-example/.venv/bin/python
-```
-
-Verifique também a versão:
-
-```bash
 python --version
 ```
 
----
+O caminho deve apontar para a pasta `.venv`.
 
-# 7. Instalação das Dependências
-
-O projeto utiliza dois arquivos para organizar suas dependências.
-
-## 7.1. Dependências da aplicação
-
-Arquivo:
-
-`requirements.txt`
-
-Contém as bibliotecas necessárias para executar a aplicação:
-
-- FastAPI
-- Uvicorn
-- Starlette
-
-O Pydantic e outras bibliotecas auxiliares são instalados automaticamente como dependências.
-
-## 7.2. Dependências de desenvolvimento
-
-Arquivo:
-
-`requirements-dev.txt`
-
-Inclui as dependências da aplicação e as ferramentas necessárias para executar os testes automatizados:
-
-- pytest
-- httpx2
-
-## 7.3. Instalar as dependências
-
-Com o ambiente virtual ativado, execute:
+## 4.4. Instalar as dependências
 
 ```bash
 python -m pip install -r requirements-dev.txt
 ```
 
-Esse comando instala tanto as dependências da aplicação quanto as ferramentas de teste.
+O arquivo `requirements-dev.txt` inclui as dependências da aplicação e as ferramentas de teste. Não é necessário instalar os dois arquivos separadamente.
 
-Não é necessário executar os dois arquivos separadamente, pois o `requirements-dev.txt` já inclui o `requirements.txt`.
-
-## 7.4. Verificar as dependências instaladas
+Para consultar os pacotes e verificar conflitos:
 
 ```bash
 python -m pip list
-```
-
-Para verificar possíveis conflitos entre dependências:
-
-```bash
 python -m pip check
-```
-
-Resultado esperado:
-
-```text
-No broken requirements found.
 ```
 
 ---
 
-# 8. Executando a API Localmente
+# 5. Executar a API Localmente
 
-Com o ambiente virtual ativado, execute:
+Com o ambiente virtual ativado:
 
 ```bash
 python -m uvicorn backend_app:app --reload
 ```
 
-O Uvicorn iniciará a aplicação na porta 8000.
+O parâmetro `--reload` reinicia o servidor quando o código muda e deve ser utilizado apenas durante o desenvolvimento.
 
-O parâmetro `--reload` permite reiniciar automaticamente a aplicação quando o código Python for modificado.
+| Recurso | Endereço |
+|---|---|
+| Página inicial | http://localhost:8000 |
+| Swagger UI | http://localhost:8000/docs |
+| Lista de livros | http://localhost:8000/livros |
 
-Esse recurso deve ser utilizado apenas durante o desenvolvimento.
-
-## 8.1. Acessar a API
-
-Página inicial:
-
-```text
-http://localhost:8000
-```
-
-Documentação interativa (Swagger UI):
-
-```text
-http://localhost:8000/docs
-```
-
-Lista de livros:
-
-```text
-http://localhost:8000/livros
-```
-
-Para encerrar o servidor, pressione:
-
-`Ctrl+C`
+Para encerrar o servidor, pressione `Ctrl+C`.
 
 ---
 
-# 9. Endpoints da API
+# 6. Endpoints da API
 
-A aplicação disponibiliza os seguintes endpoints:
-
-| Método HTTP | Endpoint | Funcionalidade |
+| Método | Endpoint | Funcionalidade |
 |---|---|---|
 | GET | `/` | Mensagem de boas-vindas |
-| GET | `/livros` | Listar todos os livros |
-| GET | `/livros/{idlivro}` | Consultar um livro pelo ID |
+| GET | `/livros` | Listar livros |
+| GET | `/livros/{idlivro}` | Consultar livro pelo ID |
 | GET | `/livros/autor/{nome}` | Consultar livros por autor |
-| POST | `/livros` | Cadastrar um livro |
-| PUT | `/livros/{idlivro}` | Atualizar um livro |
-| DELETE | `/livros/{idlivro}` | Excluir um livro |
+| POST | `/livros` | Cadastrar livro |
+| PUT | `/livros/{idlivro}` | Atualizar livro |
+| DELETE | `/livros/{idlivro}` | Excluir livro |
 
-## 9.1. Exemplo de cadastro
+## Exemplo de cadastro
 
-Requisição:
-
-```http
-POST /livros
-```
-
-Corpo da requisição:
+Envie uma requisição `POST /livros` com:
 
 ```json
 {
@@ -347,7 +228,7 @@ Corpo da requisição:
 }
 ```
 
-Resposta esperada:
+Exemplo de resposta:
 
 ```json
 {
@@ -361,251 +242,154 @@ Resposta esperada:
 }
 ```
 
-O identificador é gerado automaticamente pela aplicação. No exemplo, o próximo ID disponível é 3.
+O ID é gerado automaticamente. No exemplo, o próximo identificador disponível é 3.
 
-**Importante:** os dados são armazenados em memória. Ao reiniciar a aplicação, os cadastros, alterações e exclusões realizados durante a execução serão perdidos.
+**Os dados ficam em memória.** Reiniciar a aplicação ou substituir o contêiner da API elimina as alterações realizadas durante a execução.
 
 ---
 
-# 10. Testes Automatizados
+# 7. Testes Automatizados
 
-O projeto utiliza **pytest** para executar testes automatizados dos endpoints da API.
+Os testes estão em `tests/test_api.py` e utilizam pytest e o TestClient do FastAPI.
 
-Os testes permitem verificar se as funcionalidades continuam funcionando corretamente após alterações no código.
-
-O arquivo de testes está localizado em:
-
-```text
-tests/test_api.py
-```
-
-## 10.1. Executar os testes
-
-Com o ambiente virtual ativado, execute:
+Execute com o ambiente virtual ativado:
 
 ```bash
 python -m pytest -v
 ```
 
-O parâmetro `-v` apresenta informações detalhadas sobre cada teste executado.
-
-Resultado esperado:
+Resultado esperado para a suíte de referência:
 
 ```text
 13 passed
 ```
 
-Os testes verificam:
+Os testes verificam o CRUD de livros, a busca por autor e respostas de erro como HTTP 404 e 422.
 
-- Funcionamento da página inicial.
-- Listagem de livros.
-- Cadastro de livros.
-- Validação de dados obrigatórios.
-- Consulta de livros por ID.
-- Consulta de livros por autor.
-- Atualização de livros.
-- Exclusão de livros.
-- Tratamento de erros HTTP 404 e 422.
+Antes de cada teste, os dados são reiniciados para evitar interferência entre os cenários.
 
-## 10.2. Independência dos testes
+**Não é necessário iniciar o Uvicorn ou os contêineres para executar os testes.**
 
-Os testes utilizam dados preparados especificamente para cada cenário.
-
-Antes de cada teste, a lista de livros é reiniciada, evitando que alterações realizadas por um teste interfiram nos demais.
-
-Os testes são executados diretamente pelo FastAPI TestClient.
-
-**Não é necessário iniciar o Uvicorn ou os contêineres Docker para executar os testes automatizados.**
-
-## 10.3. Importância para DevOps
-
-Futuramente, os testes serão executados automaticamente pelo GitHub Actions.
-
-Quando um desenvolvedor enviar alterações ao repositório, a pipeline poderá:
-
-1. Preparar o ambiente Python.
-2. Instalar as dependências.
-3. Executar os testes automatizados.
-4. Interromper a pipeline caso algum teste falhe.
-5. Continuar para a construção das imagens Docker quando os testes passarem.
+A mesma suíte é executada pela CI. Se algum teste falhar, a construção e a publicação das imagens não seguem.
 
 ---
 
-# 11. Docker — Ambiente de Desenvolvimento
+# 8. Docker — Desenvolvimento
 
-O ambiente Docker de desenvolvimento utiliza dois contêineres:
+O ambiente de desenvolvimento utiliza os serviços `api` e `web`.
 
-- `api`: aplicação FastAPI executada pelo Uvicorn.
-- `web`: Nginx configurado como proxy reverso.
-
-O Docker Compose constrói as imagens e cria a rede necessária para a comunicação entre os serviços.
-
-## 11.1. Construir e iniciar os contêineres
-
-Na raiz do projeto:
+## Iniciar
 
 ```bash
 docker compose -f compose.dev.yaml up -d --build
 ```
 
-Esse comando:
+O comando constrói as imagens, cria a rede e inicia os contêineres em segundo plano.
 
-- Constrói as imagens Docker.
-- Cria os contêineres.
-- Configura a rede do projeto.
-- Inicia os serviços em segundo plano.
+## Acessar
 
-## 11.2. Acessar a aplicação
+| Recurso | Endereço |
+|---|---|
+| Página inicial | http://localhost:8080 |
+| Swagger UI | http://localhost:8080/docs |
+| Livros | http://localhost:8080/livros |
+| Saúde do Nginx | http://localhost:8080/nginx-health |
 
-Swagger UI:
+A porta 8080 pertence ao acesso externo pelo Nginx. A API utiliza a porta 8000 na rede interna do Docker.
 
-```text
-http://localhost:8080/docs
-```
-
-Lista de livros:
-
-```text
-http://localhost:8080/livros
-```
-
-Healthcheck do Nginx:
-
-```text
-http://localhost:8080/nginx-health
-```
-
-Observe que agora utilizamos a porta **8080**, publicada pelo contêiner Nginx.
-
-O Nginx encaminha as requisições para o Uvicorn, que utiliza a porta 8000 na rede interna do Docker.
-
-## 11.3. Verificar os serviços
+## Verificar serviços
 
 ```bash
 docker compose -f compose.dev.yaml ps
 ```
 
-## 11.4. Acompanhar os logs
+## Acompanhar logs
 
 ```bash
 docker compose -f compose.dev.yaml logs -f
 ```
 
-## 11.5. Parar e remover os contêineres
+Pressione `Ctrl+C` para sair dos logs sem parar os serviços.
+
+## Encerrar
 
 ```bash
 docker compose -f compose.dev.yaml down
 ```
 
-## 11.6. Desenvolvimento com atualização automática
+O ambiente utiliza um bind mount para compartilhar o código Python e executa Uvicorn com `--reload`. Alterações no código podem ser aplicadas sem reconstruir a imagem.
 
-O ambiente de desenvolvimento utiliza um volume para compartilhar o arquivo Python entre o computador e o contêiner.
-
-O Uvicorn é executado com:
+Após alterações nas dependências ou nos Dockerfiles, reconstrua:
 
 ```bash
-uvicorn backend_app:app --host 0.0.0.0 --port 8000 --reload
+docker compose -f compose.dev.yaml up -d --build
 ```
-
-Assim, alterações no código Python podem ser aplicadas automaticamente, sem necessidade de reconstruir a imagem Docker.
 
 ---
 
-# 12. Docker — Ambiente de Produção
+# 9. Docker — Execução Manual com Imagens Versionadas
 
-O ambiente de produção utiliza imagens Docker previamente construídas.
+O arquivo `compose.prod.yaml` demonstra a execução com imagens previamente construídas.
 
-Diferentemente do ambiente de desenvolvimento:
+Esse ambiente não compartilha o código por bind mount e não utiliza `--reload`.
 
-- Não utiliza volumes para compartilhar o código-fonte.
-- Não utiliza o parâmetro `--reload`.
-- Executa os arquivos incorporados às imagens Docker.
-- Utiliza imagens identificadas pela versão `1.0.0`.
-- Possui política de reinicialização dos contêineres.
-
-## 12.1. Construir a imagem da API
+## Construir as imagens
 
 ```bash
 docker build -t devops-pipeline-example-api:1.0.0 \
     -f docker/python/Dockerfile .
 ```
 
-## 12.2. Construir a imagem do Nginx
-
 ```bash
 docker build -t devops-pipeline-example-web:1.0.0 \
     -f docker/nginx/Dockerfile .
 ```
 
-## 12.3. Iniciar o ambiente de produção
+## Iniciar
 
 ```bash
 docker compose -f compose.prod.yaml up -d
 ```
 
-## 12.4. Verificar os serviços
+## Verificar serviços e logs
 
 ```bash
 docker compose -f compose.prod.yaml ps
-```
-
-## 12.5. Acompanhar os logs
-
-```bash
 docker compose -f compose.prod.yaml logs -f
 ```
 
-## 12.6. Parar e remover os contêineres
+## Encerrar
 
 ```bash
 docker compose -f compose.prod.yaml down
 ```
 
-**Observação:** o Compose de produção utiliza as imagens `1.0.0`. Elas devem estar disponíveis localmente ou em um registro de imagens acessível ao Docker.
+As imagens `1.0.0` precisam estar disponíveis para o Docker.
+
+Esse é o exercício manual. No fluxo CI/CD, as imagens são construídas pelo GitHub Actions, publicadas no GHCR e identificadas pelo commit.
+
+**Encerre o ambiente DEV antes de iniciar o PROD na mesma máquina**, pois eles podem utilizar os mesmos nomes e portas.
 
 ---
 
-# 13. Health Checks
+# 10. Health Checks
 
-O projeto utiliza verificações de saúde para acompanhar o funcionamento dos serviços.
+Os healthchecks verificam periodicamente se os serviços estão respondendo.
 
-## 13.1. Nginx
+| Serviço | Verificação |
+|---|---|
+| Nginx | Requisição a `/nginx-health`, que retorna `OK` |
+| API | Requisição à rota `/` |
 
-Endpoint:
+O healthcheck do Nginx não consulta a API. O da API confirma que a rota inicial responde, mas não verifica todas as funcionalidades do CRUD.
 
-```http
-GET /nginx-health
-```
-
-Retorno:
-
-```text
-OK
-```
-
-Verifica se o servidor Nginx está respondendo.
-
-Essa verificação é realizada diretamente pelo Nginx, sem consultar a aplicação FastAPI.
-
-## 13.2. Aplicação FastAPI
-
-O Dockerfile Python possui um healthcheck que realiza uma requisição HTTP para:
-
-```http
-GET /
-```
-
-Se a aplicação responder com sucesso, o contêiner poderá ser considerado saudável.
-
-Essa verificação confirma que a rota inicial está respondendo, mas não garante que todas as funcionalidades do CRUD estejam funcionando.
-
-## 13.3. Verificar a saúde dos contêineres
+Consulte o estado dos contêineres:
 
 ```bash
 docker ps
 ```
 
-Para verificar diretamente o estado de saúde da API:
+Para consultar diretamente a API, quando utilizado o nome fixo:
 
 ```bash
 docker inspect --format='{{.State.Health.Status}}' devops-pipeline-example-api
@@ -613,154 +397,358 @@ docker inspect --format='{{.State.Health.Status}}' devops-pipeline-example-api
 
 Estados possíveis:
 
-| Estado | Significado |
-|---|---|
-| `starting` | Verificações iniciais em andamento |
-| `healthy` | As verificações de saúde estão passando |
-| `unhealthy` | As verificações de saúde estão falhando |
+- `starting`: verificações iniciais.
+- `healthy`: verificações passando.
+- `unhealthy`: verificações falhando.
 
-**Importante:** um healthcheck com falha não provoca, por si só, a reinicialização automática do contêiner pelo Docker.
+Caso o contêiner tenha outro nome, consulte `docker ps` e ajuste o comando.
+
+**Um estado `unhealthy` não provoca, por si só, o reinício automático do contêiner.**
+
+No deploy, o Compose utiliza `--wait` para aguardar os serviços ficarem em execução e, quando houver healthcheck, saudáveis. Isso não substitui um teste completo da aplicação.
 
 ---
 
-# 14. Comandos Úteis do Docker
+# 11. Comandos Úteis
 
-Listar contêineres em execução:
+| Ação | Comando |
+|---|---|
+| Contêineres em execução | `docker ps` |
+| Todos os contêineres | `docker ps -a` |
+| Imagens locais | `docker images` |
+| Logs da API | `docker logs devops-pipeline-example-api` |
+| Logs do Nginx | `docker logs devops-pipeline-example-web` |
+| Terminal da API | `docker exec -it devops-pipeline-example-api sh` |
+| Terminal do Nginx | `docker exec -it devops-pipeline-example-web sh` |
+
+Os exemplos utilizam nomes fixos definidos com `container_name`. Se utilizar nomes automáticos, confira-os com `docker ps`.
+
+Para baixar uma versão publicada pela CI:
+
+```bash
+docker pull ghcr.io/jsclibar/devops-pipeline-example-api:446c0bc
+```
+
+A tag `446c0bc` é ilustrativa. Utilize uma tag disponível no GHCR.
+
+---
+
+# 12. Execução Local x Docker
+
+| Característica | Local | Docker |
+|---|---|---|
+| Python | Instalado no computador | Incluído na imagem |
+| Dependências | Instaladas no `.venv` | Instaladas no build |
+| Uvicorn | Executado diretamente | Executado no contêiner |
+| Nginx | Não utilizado | Proxy reverso |
+| Porta de acesso | 8000 | 8080 |
+
+O ambiente virtual do computador não é utilizado pelos contêineres.
+
+No deploy, o servidor não precisa instalar Python ou as bibliotecas da aplicação. Ele executa as imagens utilizando Docker e Docker Compose.
+
+---
+
+# 13. CI/CD com GitHub Actions
+
+O projeto utiliza dois workflows:
+
+| Workflow | Arquivo | Responsabilidade |
+|---|---|---|
+| CI | `.github/workflows/ci.yml` | Testar, construir e publicar |
+| CD | `.github/workflows/cd.yml` | Implantar uma versão escolhida |
+
+```text
+Push na main
+      |
+      v
+CI: testes → construção → publicação
+      |
+      v
+GHCR: imagens identificadas pelo commit
+      |
+      | Escolha manual da tag
+      v
+CD: conexão SSH → pull → atualização
+      |
+      v
+Aplicação no servidor
+```
+
+## 13.1. Integração Contínua — CI
+
+A CI executa a cada push na branch `main` ou manualmente pela aba **Actions**.
+
+Em uma máquina Ubuntu temporária do GitHub, ela:
+
+1. Obtém o código.
+2. Prepara Python e instala as dependências.
+3. Executa os testes.
+4. Constrói as imagens da API e do Nginx.
+5. Publica as imagens no GHCR.
+
+Os passos executam em sequência. Uma falha impede a execução dos passos seguintes por padrão.
+
+A autenticação no registry utiliza o `GITHUB_TOKEN`, fornecido automaticamente, com:
+
+```yaml
+permissions:
+  contents: read
+  packages: write
+```
+
+Pacotes publicados anteriormente de forma manual podem exigir autorização adicional em:
+
+**Package settings → Manage Actions access → seu repositório → Write**
+
+## 13.2. Tags das imagens
+
+A CI utiliza os primeiros sete caracteres do commit:
+
+```bash
+TAG=${GITHUB_SHA:0:7}
+```
+
+Exemplo:
+
+```text
+ghcr.io/jsclibar/devops-pipeline-example-api:446c0bc
+ghcr.io/jsclibar/devops-pipeline-example-web:446c0bc
+```
+
+A mesma tag identifica as duas imagens daquela execução.
+
+Antes de implantar, confirme que ela existe nos dois pacotes. A publicação de uma imagem pode funcionar enquanto a outra falha.
+
+## 13.3. Entrega e Implantação — CD
+
+O CD é iniciado manualmente pelo evento `workflow_dispatch`. O usuário informa a tag desejada, e o restante do deploy é automatizado.
+
+A ação `appleboy/ssh-action` conecta ao servidor e executa o conteúdo de `script`.
+
+O script:
+
+1. Cria a pasta da aplicação.
+2. Escreve o arquivo `compose.aws.yaml` no servidor.
+3. Disponibiliza a variável `TAG`.
+4. Baixa as duas imagens.
+5. Atualiza os contêineres.
+
+**Não é necessário criar o `compose.aws.yaml` no repositório ou copiá-lo manualmente para a instância.** Sua configuração está no próprio workflow de CD.
+
+Os comandos principais são:
+
+```bash
+export TAG
+
+docker compose -f compose.aws.yaml pull
+
+docker compose -f compose.aws.yaml up -d --wait
+```
+
+O Compose utiliza `${TAG}` nos nomes das imagens:
+
+```yaml
+services:
+  api:
+    image: ghcr.io/jsclibar/devops-pipeline-example-api:${TAG}
+
+  web:
+    image: ghcr.io/jsclibar/devops-pipeline-example-web:${TAG}
+```
+
+O `pull` baixa as imagens. O `up` cria ou atualiza os serviços, recriando os contêineres quando necessário, como na mudança de imagem.
+
+O `--wait` aguarda a inicialização e os healthchecks. Ao executar novamente com as mesmas imagens e configurações, o Compose pode manter os contêineres existentes.
+
+## 13.4. Onde os comandos executam
+
+| Trecho do workflow | Local de execução |
+|---|---|
+| `run` da CI | Executor do GitHub |
+| Ação de conexão SSH | Inicia no executor do GitHub |
+| `script` da ação SSH | Servidor de destino |
+
+A tag é recebida no GitHub e enviada ao servidor pela ação:
+
+```yaml
+env:
+  TAG: ${{ inputs.tag }}
+
+with:
+  envs: TAG
+```
+
+O `env` disponibiliza a variável ao passo. O `envs`, opção da ação SSH, leva essa variável para o ambiente remoto.
+
+---
+
+# 14. Preparar o Servidor
+
+O exemplo utiliza uma instância **Amazon EC2**, com:
+
+- Docker Engine e Docker Compose instalados.
+- Acesso SSH funcionando.
+- Usuário autorizado a executar Docker sem `sudo`.
+- Conectividade para baixar as imagens.
+- Arquitetura compatível com as imagens da CI.
+- Regras de rede permitindo SSH do executor e acesso à aplicação.
+
+Para adicionar o usuário atual ao grupo Docker:
+
+```bash
+sudo usermod -aG docker "$USER"
+```
+
+Saia da sessão SSH, conecte-se novamente e teste:
 
 ```bash
 docker ps
 ```
 
-Listar todos os contêineres:
+O grupo `docker` concede poderes equivalentes aos de administrador sobre o servidor.
 
-```bash
-docker ps -a
-```
+No modelo apresentado, as imagens precisam estar públicas no GHCR, pois o CD não realiza login no registry dentro da EC2.
 
-Listar imagens:
-
-```bash
-docker images
-```
-
-Entrar no contêiner da API:
-
-```bash
-docker exec -it devops-pipeline-example-api sh
-```
-
-Entrar no contêiner do Nginx:
-
-```bash
-docker exec -it devops-pipeline-example-web sh
-```
-
-Visualizar os logs da API:
-
-```bash
-docker logs devops-pipeline-example-api
-```
-
-Visualizar os logs do Nginx:
-
-```bash
-docker logs devops-pipeline-example-web
-```
-
-Reconstruir o ambiente de desenvolvimento:
-
-```bash
-docker compose -f compose.dev.yaml up -d --build
-```
-
----
-
-# 15. Desenvolvimento Local x Docker
-
-O projeto pode ser executado de duas maneiras.
-
-| Característica | Execução local | Execução com Docker |
-|---|---|---|
-| Python | Instalado no computador | Instalado na imagem |
-| Dependências | Instaladas no `.venv` | Instaladas durante o build |
-| Ambiente virtual | Necessário para isolamento | Não é necessário no computador |
-| Uvicorn | Executado diretamente | Executado no contêiner |
-| Nginx | Não utilizado | Atua como proxy reverso |
-| Porta de acesso | 8000 | 8080 |
-| Testes automatizados | Executados com pytest | Podem ser executados separadamente |
-
-O ambiente virtual criado no computador não é utilizado pelos contêineres Docker.
-
-Cada imagem possui seu próprio ambiente e suas próprias dependências.
-
----
-
-# 16. Próximos Passos — CI/CD
-
-O projeto será utilizado nas próximas etapas das aulas de DevOps para implementação de uma pipeline CI/CD.
-
-Tecnologias previstas:
-
-- GitHub Actions
-- GitHub Container Registry (GHCR)
-- Docker
-- Docker Compose
-- Deploy em VPS
-- AWS
-
-## Fluxo previsto
+O acesso à aplicação ocorre por:
 
 ```text
-Desenvolvedor
-      |
-      | Git Push
-      v
-    GitHub
-      |
-      v
- GitHub Actions
-      |
-      | Integração Contínua (CI)
-      |
-      +--> Preparar ambiente Python
-      |
-      +--> Instalar dependências
-      |
-      +--> Executar testes automatizados
-      |
-      +--> Construir imagens Docker
-      |
-      v
- GitHub Container Registry
-      |
-      | Imagens Docker versionadas
-      v
- Servidor VPS / AWS
-      |
-      | Deploy
-      v
- Docker Compose
-      |
-      +--> Nginx
-      |
-      +--> FastAPI + Uvicorn
-      |
-      v
- Aplicação disponível
+http://IP_PUBLICO_DO_SERVIDOR:8080/docs
 ```
 
-O objetivo é automatizar o processo de verificação, construção, publicação e implantação da aplicação.
+A API permanece acessível internamente na porta 8000; o Nginx publica o acesso externo na porta 8080.
 
-Os testes automatizados funcionarão como uma etapa de controle de qualidade, permitindo interromper a pipeline caso sejam identificadas falhas nos cenários testados.
+**A conexão SSH do Actions vem do executor do GitHub, não do computador do aluno.** Os executores padrão possuem IPs variáveis, que precisam ser considerados nas regras de acesso.
 
 ---
 
-# 17. Objetivo do Projeto
+# 15. Secrets e Identificação do Servidor
 
-Este repositório foi desenvolvido para fins educacionais, como material de apoio às aulas de DevOps.
+Cadastre as informações em:
 
-Seu objetivo é demonstrar, de forma prática, como diferentes ferramentas e tecnologias são utilizadas durante o ciclo de desenvolvimento e entrega de software.
+**Settings → Secrets and variables → Actions → Secrets → New repository secret**
 
-A API FastAPI funciona como aplicação de referência, permitindo que os estudantes concentrem seus esforços nos conceitos de versionamento, testes automatizados, conteinerização, integração contínua e implantação de aplicações.
+| Secret | Conteúdo |
+|---|---|
+| `EC2_HOST` | IP ou DNS do servidor, sem `http://` |
+| `EC2_USER` | Usuário SSH, como `ubuntu` |
+| `EC2_SSH_KEY` | Conteúdo completo da chave privada `.pem` |
+| `EC2_FINGERPRINT` | Fingerprint da chave pública do servidor |
 
-O projeto será ampliado gradualmente conforme a evolução das aulas.
+A chave privada deve incluir as linhas de início e fim. Não adicione o `.pem` ao repositório.
+
+Os nomes usam `EC2` por causa do exemplo. Eles podem ser utilizados com outro servidor ou renomeados, desde que o workflow seja atualizado.
+
+## Chave privada e fingerprint
+
+São duas verificações diferentes:
+
+- **Chave privada do usuário:** comprova autorização para acessar.
+- **Fingerprint do servidor:** permite conferir quem respondeu à conexão.
+
+O servidor possui suas próprias chaves SSH, separadas das chaves do usuário. O fingerprint é um resumo da chave pública do servidor.
+
+Para consultar os fingerprints, execute dentro do servidor:
+
+```bash
+sudo sh -c 'for chave in /etc/ssh/ssh_host_*_key.pub; do ssh-keygen -lf "$chave" -E sha256; done'
+```
+
+Cada tipo de chave, como ECDSA, ED25519 ou RSA, possui um fingerprint. Cadastre aquele correspondente à chave apresentada na conexão do Actions.
+
+Copie somente o trecho neste formato:
+
+```text
+SHA256:IDENTIFICACAO_DA_CHAVE
+```
+
+Se aparecer `host key fingerprint mismatch`, confira o endereço, o Secret e a chave apresentada pelo servidor. Não aceite um fingerprint diferente sem confirmar sua origem.
+
+---
+
+# 16. Executar CI, CD e Rollback
+
+## 16.1. Executar a CI
+
+A CI inicia automaticamente em pushes na `main`.
+
+Para executar manualmente:
+
+1. Abra **Actions**.
+2. Selecione o workflow de CI.
+3. Clique em **Run workflow**.
+4. Selecione `main` e inicie.
+
+Ao terminar, consulte **Packages** e confirme a publicação das duas imagens com a mesma tag.
+
+Os workflows precisam estar na branch padrão para disponibilizar a execução manual pela interface.
+
+## 16.2. Executar o CD
+
+1. Abra **Actions → CD manual**.
+2. Clique em **Run workflow**.
+3. Selecione `main`.
+4. Informe uma tag publicada nas duas imagens.
+5. Execute e acompanhe os logs.
+
+Evite deploys simultâneos no mesmo servidor.
+
+Após o sucesso, confira:
+
+```text
+http://IP_PUBLICO_DO_SERVIDOR:8080/docs
+```
+
+O `--wait` verifica a inicialização dos serviços, mas não testa o acesso externo ou todas as funcionalidades da API.
+
+## 16.3. Fazer rollback
+
+Execute novamente o CD informando uma tag anterior:
+
+```text
+Versão atual:     e66081d
+Versão anterior:  446c0bc
+```
+
+Ao informar `446c0bc`, o servidor passa a executar as imagens dessa versão.
+
+As imagens antigas precisam continuar disponíveis nos dois pacotes do GHCR.
+
+O rollback:
+
+- Altera a versão executada no servidor.
+- Não modifica o código da branch `main`.
+- Não recupera dados que estavam na memória da aplicação.
+- É iniciado manualmente pelo mesmo workflow de CD.
+
+---
+
+# 17. Adaptação para Outras Infraestruturas
+
+A EC2 é apenas o servidor escolhido para demonstrar o deploy.
+
+Como o CD utiliza SSH e Docker Compose, ele pode ser adaptado para outras clouds, VPS, máquinas virtuais ou servidores físicos.
+
+Os principais ajustes são endereço, usuário, chave, fingerprint, caminhos e regras de rede.
+
+O servidor também pode estar em uma **VPC ou rede privada**, desde que o executor consiga alcançá-lo. Isso pode exigir VPN, bastion ou um executor instalado na própria rede.
+
+Uma VPC é a rede onde o servidor está localizado. A conexão depende das rotas e das regras de acesso dessa rede.
+
+O nome `compose.aws.yaml` pode ser alterado em outra infraestrutura, desde que os comandos do workflow sejam atualizados.
+
+---
+
+# 18. Escopo Educacional
+
+O projeto demonstra um fluxo simples, com um único servidor e deploy manualmente iniciado.
+
+O exemplo não inclui alta disponibilidade, HTTPS ou rollback automático. A atualização pode causar uma breve indisponibilidade, e os dados em memória são perdidos quando a API é reiniciada.
+
+Os testes da CI verificam a API, mas não representam uma validação completa do ambiente implantado.
+
+A proposta é permitir que os alunos compreendam o fluxo:
+
+**alterar → testar → construir → publicar → escolher a versão → implantar**
+
+O projeto pode evoluir gradualmente conforme o avanço das aulas.

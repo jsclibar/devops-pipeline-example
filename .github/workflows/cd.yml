@@ -1,4 +1,4 @@
-name: CD manual
+name: Deploy da API + Nginx no AWS EC2
 
 # Execução manual com escolha da tag.
 on:
@@ -69,4 +69,4 @@ jobs:
             docker compose -f compose.aws.yaml pull
 
             # Atualiza os contêineres e aguarda a inicialização.
-            docker compose -f compose.aws.yaml up -d --force-recreate --wait
+            docker compose -f compose.aws.yaml up -d --wait
