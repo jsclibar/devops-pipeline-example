@@ -48,10 +48,12 @@ jobs:
             services:
               api:
                 image: ghcr.io/jsclibar/devops-pipeline-example-api:${TAG}
+                container_name: devops-pipeline-example-api
                 restart: unless-stopped
 
               web:
                 image: ghcr.io/jsclibar/devops-pipeline-example-web:${TAG}
+                container_name: devops-pipeline-example-web
                 restart: unless-stopped
                 ports:
                   - "8080:80"
