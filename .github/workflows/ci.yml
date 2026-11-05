@@ -4,9 +4,9 @@ name: CI da API e do Nginx
 # Define quando este workflow pode executar.
 on:
   # Execução automática quando alterações são enviadas.
-  #push:
+  push:
     # Executa automaticamente apenas na branch main.
-    #branches: [main]
+    branches: [main]
 
   # Permite iniciar manualmente pelo botão "Run workflow".
   workflow_dispatch:
